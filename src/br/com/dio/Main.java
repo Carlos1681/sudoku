@@ -13,7 +13,7 @@ import static java.util.Objects.isNull;
 
 import br.com.dio.model.Board;
 import br.com.dio.model.Space;
-import br.com.dio.util.BoardTemplate;
+import static br.com.dio.util.BoardTemplate.BOARD_TEMPLATE;
 
 public class Main {
 	
@@ -55,27 +55,57 @@ public class Main {
 		
 	}
 	
-	private static void startGame(Map<String, String> positions) {
-		if (nonNull(board)){
-            System.out.println("O jogo já foi iniciado");
-            return;
-        }
+	private static void startGame(final Map<String, String> positions) {
 
-        List<List<Space>> spaces = new ArrayList<>();
-        for (int i = 0; i < BOARD_LIMIT; i++) {
-            spaces.add(new ArrayList<>());
-            for (int j = 0; j < BOARD_LIMIT; j++) {
-                var positionConfig = positions.get("%s,%s".formatted(i, j));
-                var expected = Integer.parseInt(positionConfig.split(",")[0]);
-                var fixed = Boolean.parseBoolean(positionConfig.split(",")[1]);
-                var currentSpace = new Space(expected, fixed);
-                spaces.get(i).add(currentSpace);
-            }
-        }
+	    if (nonNull(board)){
+	        System.out.println("O jogo já foi iniciado");
+	        return;
+	    }
 
-        board = new Board(spaces);
-        System.out.println("O jogo está pronto para começar");
+	    List<List<Space>> spaces = new ArrayList<>();
+
+	    boolean hasArguments = positions != null && !positions.isEmpty();
+
+	    for (int i = 0; i < BOARD_LIMIT; i++) {
+	        spaces.add(new ArrayList<>());
+
+	        for (int j = 0; j < BOARD_LIMIT; j++) {
+
+	            Integer expected;
+	            boolean fixed;
+
+	            if (hasArguments && positions.containsKey("%s,%s".formatted(i, j))) {
+
+	                var positionConfig = positions.get("%s,%s".formatted(i, j));
+	                expected = Integer.parseInt(positionConfig.split(",")[0]);
+	                fixed = Boolean.parseBoolean(positionConfig.split(",")[1]);
+
+	            } else {
+	                int[][] defaultBoard = {
+	                        {5,3,0,0,7,0,0,0,0},
+	                        {6,0,0,1,9,5,0,0,0},
+	                        {0,9,8,0,0,0,0,6,0},
+	                        {8,0,0,0,6,0,0,0,3},
+	                        {4,0,0,8,0,3,0,0,1},
+	                        {7,0,0,0,2,0,0,0,6},
+	                        {0,6,0,0,0,0,2,8,0},
+	                        {0,0,0,4,1,9,0,0,5},
+	                        {0,0,0,0,8,0,0,7,9}
+	                };
+
+	                expected = defaultBoard[i][j];
+	                fixed = expected != 0;
+	            }
+
+	            var currentSpace = new Space(expected, fixed);
+	            spaces.get(i).add(currentSpace);
+	        }
+	    }
+
+	    board = new Board(spaces);
+	    System.out.println("O jogo está pronto para começar");
 	}
+
 
 	private static void inputNumber() {
 		 if (isNull(board)){
@@ -120,14 +150,13 @@ public class Main {
 		
 		var args = new Object[81];
 		var argPos = 0;
-		var colSize = BOARD_LIMIT;
 		for (int i = 0; i < BOARD_LIMIT; i++) {
 			for(var col: board.getSpaces()) {
 				args[argPos ++] = " " + (isNull(col.get(i).getActual()) ? " " : col.get(i).getActual());
 			}
 		}
 		System.out.println("Seu jogo se encontra da seguinte forma:");
-		System.out.printf((BoardTemplate.BOARD_TEMPLATE) + "%n", args);
+		System.out.printf((BOARD_TEMPLATE) + "\n", args);
 	}
 
 	private static void showGameStatus() {
@@ -138,9 +167,9 @@ public class Main {
 		
 		System.out.printf("O jogo atualmente se encontra no status: %s", board.getStatus().getLabel());
 		if(board.hasErrors()) {
-			System.out.println("O jogo contém erros!");
+			System.out.println("\nO jogo contém erros!");
 		} else {
-			System.out.println("O jogo não contém erros!");
+			System.out.println("\nO jogo não contém erros!");
 		}
 	}
 
